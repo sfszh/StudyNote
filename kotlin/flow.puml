@@ -1,0 +1,60 @@
+@startuml
+abstract class CoroutineDispatcher
+
+interface CoroutineContext
+
+interface CoroutineScope {
+    +CoroutineContext coroutineContext
+    +CoroutineScope plus(CoroutineContext context)
+    +Job launch(CoroutineContext context, CoroutineStart start, block)
+    +Deferred async(CoroutineContext context, CoroutineStart start, block)
+}
+object GlobalScope
+CoroutineScope <|-- GlobalScope
+
+abstract class AbstractCoroutine
+CoroutineScope <|-- AbstractCoroutine
+
+
+interface Job
+note left of Job : A background job. Conceptually, a job is a cancellable thing with a life-cycle that culminates in its completion.
+interface Deferred
+note left of Deferred : Deferred value is a non-blocking cancellable future — it is a Job with a result.
+
+interface CoroutineContext.Element
+note right of CoroutineContext.Element : An element of the CoroutineContext. An element of the coroutine context is a singleton context by itself.
+interface CoroutineContext.Key
+
+CoroutineContext <|-- CoroutineContext.Element
+CoroutineContext.Element <|-- Job
+Job <|-- Deferred
+
+CoroutineScope o-- CoroutineContext
+
+abstract class AbstractCoroutineContextElement
+note right of AbstractCoroutineContextElement : base class for CoroutineContext.Element implementations.
+CoroutineContext.Element <|-- AbstractCoroutineContextElement
+AbstractCoroutineContextElement o--  CoroutineContext.Key
+
+interface ContinuationInterceptor
+CoroutineContext.Element <|-- ContinuationInterceptor
+note bottom of ContinuationInterceptor : Marks coroutine context element that intercepts coroutine continuations.
+
+
+AbstractCoroutineContextElement <|-- CoroutineDispatcher
+ContinuationInterceptor <|-- CoroutineDispatcher
+object Dispatchers.IO
+note bottom of Dispatchers.IO : uses a shared pool of on-demand created threads \nand is designed for offloading of IO-intensive blocking operations \n(like file I/O and blocking socket I/O).
+object Dispatchers.Default
+note bottom of Dispatchers.Default : is used by all standard builders if no dispatcher or any other
+object Dispatchers.Main
+object Dispatchers.Unconfined
+
+CoroutineDispatcher <|-- Dispatchers.IO
+CoroutineDispatcher <|-- Dispatchers.Default
+CoroutineDispatcher <|-- Dispatchers.Main
+CoroutineDispatcher <|-- Dispatchers.Unconfined
+
+
+
+@enduml
